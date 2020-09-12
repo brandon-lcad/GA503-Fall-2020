@@ -42,3 +42,4 @@ sysinfo.txt
 \.vs/GeometricGame/xs/UserPrefs\.xml
 
 \.DS_Store
+Packages/packages-lock.json
