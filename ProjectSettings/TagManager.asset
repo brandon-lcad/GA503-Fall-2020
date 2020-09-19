@@ -7,6 +7,7 @@ TagManager:
   - Lightsource
   - Sun
   - Moon
+  - Ground
   layers:
   - Default
   - TransparentFX
