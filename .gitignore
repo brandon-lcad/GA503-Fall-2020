@@ -44,3 +44,7 @@ sysinfo.txt
 \.DS_Store
 Packages/packages-lock.json
 Packages/manifest.json
+.vs/GA503-Fall-2020/v15/Server/sqlite3/storage.ide-wal
+.vs/GA503-Fall-2020/v15/Server/sqlite3/storage.ide-shm
+.vs/GA503-Fall-2020/v15/Server/sqlite3/storage.ide
+.vs/GA503-Fall-2020/v15/Server/sqlite3/db.lock
