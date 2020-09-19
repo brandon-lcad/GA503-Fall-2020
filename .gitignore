@@ -43,3 +43,4 @@ sysinfo.txt
 
 \.DS_Store
 Packages/packages-lock.json
+Packages/manifest.json
