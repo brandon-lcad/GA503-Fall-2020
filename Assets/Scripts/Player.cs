@@ -10,7 +10,8 @@ public class Player : MonoBehaviour
 
     // VARIABLES FOR JUMP HEIGHT AND RIGIDBODY
     public float jumpHeight = 5.0f;
-    public bool isGrounded = true; 
+    public float groundDistance = 1.02f; 
+    public bool onGround = true; 
 
     private Rigidbody rb; 
 
@@ -29,10 +30,7 @@ public class Player : MonoBehaviour
     // FixedUpdate is called before each physics update
     void FixedUpdate() 
     {
-        // JUMP WHEN SPACE IS TAPPED
-        if (isGrounded && Input.GetKeyUp(KeyCode.Space)) {
-            rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
-        }
+
     }
 
     // Update is called once per frame
@@ -51,22 +49,24 @@ public class Player : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(movement);
             transform.Translate(movement * moveSpeed * Time.deltaTime, Space.World);
         }
-    }
 
+        // DETECT WHETHER OR NOT THE PLAYER IS ON THE GROUND
+        RaycastHit hit;
+        Vector3 center = transform.position + GetComponent<CapsuleCollider>().center;
+        Debug.DrawRay(center, Vector3.down * groundDistance, Color.red);
 
-    //TODO -- Fix ground detection later!
-
-    /*
-    void OnCollisionEnter(Collision other) {
-        if (other.gameObject.tag == "Ground") {
-            isGrounded = true; 
+        if (Physics.Raycast(center, Vector3.down, out hit, groundDistance)) {
+            if (hit.transform.gameObject.tag != "Player") {
+                onGround = true;
+            }
+        } else {
+            onGround = false;
         }
-    }
 
-    void OnCollisionExit(Collision other) {
-        if (other.gameObject.tag == "Ground") {
-            isGrounded = false;
+        // JUMP WHEN SPACE IS TAPPED
+        if (onGround && Input.GetKeyUp(KeyCode.Space)) {
+            rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
         }
+
     }
-    */
 }
