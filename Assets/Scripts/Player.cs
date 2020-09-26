@@ -1,19 +1,42 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI; 
 
 public class Player : MonoBehaviour
 {
-    // VARIABLES FOR INPUT AND SPEED
-    public float moveSpeed = 5.0f;
-    private float horizontal, vertical;
+    [Header("Health")]
+    [SerializeField] private float health = 0;
+    [SerializeField] private float maxHealth = 100;
+    [SerializeField] private Slider healthSlider;
 
-    // VARIABLES FOR JUMP HEIGHT AND RIGIDBODY
-    public float jumpHeight = 5.0f;
-    public float groundDistance = 1.02f; 
-    public bool onGround = true; 
+    public float Health {
+        get { return health; }
+        set {
+            health = value;
+            healthSlider.value = Mathf.Clamp(value / 100, 0, 1);
+        }
+    }
 
-    private Rigidbody rb; 
+    [Header("Hazards")]
+    [SerializeField] private bool isBurning = false;
+    [SerializeField] private float burningDamage = 10f;
+
+    [Header("Move")]
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float rotateSpeed = 10f;
+    [SerializeField] private float snapAngle = 90f;
+
+    [Header("Jump")]
+    [SerializeField] public float jumpHeight = 5f;
+    [SerializeField] private bool isGrounded = true;
+    [SerializeField] private float groundDistance = 1.02f;
+
+    [Header("Input")]
+    [SerializeField] private Vector2 playerInput;
+
+    private Rigidbody rb;
+    private Animator animator;
 
     // Awake is called before the game starts
     void Awake() 
@@ -24,6 +47,8 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Health = maxHealth;
+        rotateSpeed *= 100f;
         rb = GetComponent<Rigidbody>();
     }
 
@@ -36,19 +61,30 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // GET THE PLAYER'S WASD INPUT
-        horizontal = Input.GetAxis("Horizontal");
-        vertical = Input.GetAxis("Vertical");
+        // Get WASD or arrow key input
+        playerInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
-        // MOVE THIS GAMEOBJECT IN THAT DIRECTION
-        Vector3 movement = new Vector3(horizontal, 0f, vertical); 
-        transform.position += movement * moveSpeed * Time.deltaTime;
+        // Translate the input relative to the camera
+        Vector3 rootDirection = transform.forward;
+        Vector3 moveDirection = new Vector3(playerInput.normalized.x, 0, playerInput.normalized.y);
+        Vector3 cameraDirection = Camera.main.transform.forward; cameraDirection.y = 0f;
+        Quaternion referentialShift = Quaternion.FromToRotation(Vector3.forward, Vector3.Normalize(cameraDirection));
+        moveDirection = referentialShift * moveDirection;
 
-        // ROTATE THE PLAYER TOWARD THE MOVEMENT DIRECTION
-        if (movement != Vector3.zero) {
-            transform.rotation = Quaternion.LookRotation(movement);
-            transform.Translate(movement * moveSpeed * Time.deltaTime, Space.World);
+        // Rotate the player toward the movement direction
+        if (playerInput != Vector2.zero) {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+
+            if (Quaternion.Angle(transform.rotation, targetRotation) > snapAngle) {
+                transform.rotation = targetRotation;
+            } else {
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
+            }
         }
+
+        // Update the transform based on input and speed
+        float moveMagnitude = Mathf.Clamp(Mathf.Abs(playerInput.magnitude), 0, 1);
+        transform.position += (rootDirection * moveMagnitude) * moveSpeed * Time.deltaTime;
 
         // DETECT WHETHER OR NOT THE PLAYER IS ON THE GROUND
         RaycastHit hit;
@@ -57,16 +93,39 @@ public class Player : MonoBehaviour
 
         if (Physics.Raycast(center, Vector3.down, out hit, groundDistance)) {
             if (hit.transform.gameObject.tag != "Player") {
-                onGround = true;
+                isGrounded = true;
             }
         } else {
-            onGround = false;
+            isGrounded = false;
         }
 
         // JUMP WHEN SPACE IS TAPPED
-        if (onGround && Input.GetKeyUp(KeyCode.Space)) {
+        if (isGrounded && Input.GetKeyUp(KeyCode.Space)) {
             rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
         }
 
+        // DO DAMAGE WHILE STANDING ON LAVA
+        if (isBurning) {
+            Health -= burningDamage * Time.deltaTime; 
+        }
+
+        if (health <= 0) {
+            Debug.Log("You died!");
+        }
+
+    }
+
+    void OnCollisionEnter(Collision other) 
+    {
+        if (other.gameObject.tag == "Lava") { 
+            isBurning = true;
+        } 
+    }
+
+    void OnCollisionExit(Collision other) 
+    {
+        if (other.gameObject.tag == "Lava") {
+            isBurning = false;
+        }
     }
 }
