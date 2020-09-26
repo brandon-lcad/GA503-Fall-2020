@@ -55,7 +55,10 @@ public class Player : MonoBehaviour
     // FixedUpdate is called before each physics update
     void FixedUpdate() 
     {
-
+        // JUMP WHEN SPACE IS TAPPED
+        if (isGrounded && Input.GetKeyUp(KeyCode.Space)) {
+            rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
+        }
     }
 
     // Update is called once per frame
@@ -86,7 +89,7 @@ public class Player : MonoBehaviour
         float moveMagnitude = Mathf.Clamp(Mathf.Abs(playerInput.magnitude), 0, 1);
         transform.position += (rootDirection * moveMagnitude) * moveSpeed * Time.deltaTime;
 
-        // DETECT WHETHER OR NOT THE PLAYER IS ON THE GROUND
+        // Detect whether or not we are on the ground
         RaycastHit hit;
         Vector3 center = transform.position + GetComponent<CapsuleCollider>().center;
         Debug.DrawRay(center, Vector3.down * groundDistance, Color.red);
@@ -99,12 +102,12 @@ public class Player : MonoBehaviour
             isGrounded = false;
         }
 
-        // JUMP WHEN SPACE IS TAPPED
+        // Jump when the space bar key is tapped (goes up)
         if (isGrounded && Input.GetKeyUp(KeyCode.Space)) {
             rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
         }
 
-        // DO DAMAGE WHILE STANDING ON LAVA
+        // Do damage while the Player is standing in lava
         if (isBurning) {
             Health -= burningDamage * Time.deltaTime; 
         }
