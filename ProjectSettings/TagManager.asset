@@ -9,7 +9,7 @@ TagManager:
   - Moon
   - Ground
   - Lava
-  - Planet
+  - Obstacle
   layers:
   - Default
   - TransparentFX
@@ -23,7 +23,7 @@ TagManager:
   - 
   - Player
   - Lava
-  - 
+  - Obstacle
   - 
   - 
   - 
