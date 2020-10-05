@@ -9,6 +9,7 @@ TagManager:
   - Moon
   - Ground
   - Lava
+  - Planet
   layers:
   - Default
   - TransparentFX
