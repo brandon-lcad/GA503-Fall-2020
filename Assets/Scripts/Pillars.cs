@@ -7,8 +7,6 @@ public class Pillars : MonoBehaviour
     [SerializeField] float raiseHeight = 0f;
     [SerializeField] float startingHeight = -7.15f;
 
-    [SerializeField] GameObject maxRaise, minRaise;
-
     [SerializeField] float raiseSpeed;
 
     public bool raising;
@@ -16,6 +14,7 @@ public class Pillars : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //transform.position = new Vector3(transform.position.x, startingHeight, transform.position.z);
     }
 
     // Update is called once per frame
