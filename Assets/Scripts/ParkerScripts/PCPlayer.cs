@@ -4,29 +4,25 @@ using UnityEngine;
 
 public class PCPlayer : MonoBehaviour
 {
-
-    public CharacterController controller;
-
     public float speed = 6f;
-
+    private Vector3 moveDir;
+    private Rigidbody Rb;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        Rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+        moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
+    }
 
-        if(direction.magnitude >= 0.1f)
-        {
-            controller.Move(direction * speed * Time.deltaTime);
-        }
+    private void FixedUpdate()
+    {
+        Rb.MovePosition(Rb.position + transform.TransformDirection(moveDir) * speed * Time.deltaTime);
     }
 }
