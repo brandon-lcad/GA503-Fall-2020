@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float health = 0;
     [SerializeField] private float maxHealth = 100;
     [SerializeField] private Slider healthSlider;
+    private bool dead = false; 
 
     public float Health {
         get { return health; }
@@ -23,6 +24,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float burningDamage = 10f;
 
     [Header("Move")]
+    [SerializeField] private float movement = 0f; 
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float rotateSpeed = 10f;
     [SerializeField] private float snapAngle = 90f;
@@ -50,6 +52,7 @@ public class Player : MonoBehaviour
         Health = maxHealth;
         rotateSpeed *= 100f;
         rb = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
     }
 
     // FixedUpdate is called before each physics update
@@ -64,58 +67,67 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Get WASD or arrow key input
-        playerInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        if (!dead) {
+            // Get WASD or arrow key input
+            playerInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
-        // Translate the input relative to the camera
-        Vector3 rootDirection = transform.forward;
-        Vector3 moveDirection = new Vector3(playerInput.normalized.x, 0, playerInput.normalized.y);
-        Vector3 cameraDirection = Camera.main.transform.forward; cameraDirection.y = 0f;
-        Quaternion referentialShift = Quaternion.FromToRotation(Vector3.forward, Vector3.Normalize(cameraDirection));
-        moveDirection = referentialShift * moveDirection;
+            // Translate the input relative to the camera
+            Vector3 rootDirection = transform.forward;
+            Vector3 moveDirection = new Vector3(playerInput.normalized.x, 0, playerInput.normalized.y);
+            Vector3 cameraDirection = Camera.main.transform.forward; cameraDirection.y = 0f;
+            Quaternion referentialShift = Quaternion.FromToRotation(Vector3.forward, Vector3.Normalize(cameraDirection));
+            moveDirection = referentialShift * moveDirection;
 
-        // Rotate the player toward the movement direction
-        if (playerInput != Vector2.zero) {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            // Rotate the player toward the movement direction
+            if (playerInput != Vector2.zero) {
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
 
-            if (Quaternion.Angle(transform.rotation, targetRotation) > snapAngle) {
-                transform.rotation = targetRotation;
+                if (Quaternion.Angle(transform.rotation, targetRotation) > snapAngle) {
+                    transform.rotation = targetRotation;
+                } else {
+                    transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
+                }
+            }
+
+            // Update the transform based on input and speed
+            float moveMagnitude = Mathf.Clamp(Mathf.Abs(playerInput.magnitude), 0, 1);
+            transform.position += (rootDirection * moveMagnitude) * moveSpeed * Time.deltaTime;
+            movement = Mathf.Abs(moveMagnitude);
+            animator.SetFloat("Movement", movement);
+
+            // Detect whether or not we are on the ground
+            RaycastHit hit;
+            Vector3 center = transform.position + GetComponent<CapsuleCollider>().center;
+            Debug.DrawRay(center, Vector3.down * groundDistance, Color.red);
+
+            if (Physics.Raycast(center, Vector3.down, out hit, groundDistance)) {
+                if (hit.transform.gameObject.tag != "Player") {
+                    isGrounded = true;
+                }
             } else {
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
+                isGrounded = false;
+            }
+
+            animator.SetBool("Jump", !isGrounded);
+
+            // Jump when the space bar key is tapped (goes up)
+            if (isGrounded && Input.GetKeyUp(KeyCode.Space)) {
+                rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
+            }
+
+            // Do damage while the Player is standing in lava
+            if (isBurning) {
+                Health -= burningDamage * Time.deltaTime;
+            }
+
+            if (health <= 0) {
+                if (!dead) {
+                    dead = true;
+                    Debug.Log("You died!");
+                    animator.SetTrigger("Die");
+                }
             }
         }
-
-        // Update the transform based on input and speed
-        float moveMagnitude = Mathf.Clamp(Mathf.Abs(playerInput.magnitude), 0, 1);
-        transform.position += (rootDirection * moveMagnitude) * moveSpeed * Time.deltaTime;
-
-        // Detect whether or not we are on the ground
-        RaycastHit hit;
-        Vector3 center = transform.position + GetComponent<CapsuleCollider>().center;
-        Debug.DrawRay(center, Vector3.down * groundDistance, Color.red);
-
-        if (Physics.Raycast(center, Vector3.down, out hit, groundDistance)) {
-            if (hit.transform.gameObject.tag != "Player") {
-                isGrounded = true;
-            }
-        } else {
-            isGrounded = false;
-        }
-
-        // Jump when the space bar key is tapped (goes up)
-        if (isGrounded && Input.GetKeyUp(KeyCode.Space)) {
-            rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
-        }
-
-        // Do damage while the Player is standing in lava
-        if (isBurning) {
-            Health -= burningDamage * Time.deltaTime; 
-        }
-
-        if (health <= 0) {
-            Debug.Log("You died!");
-        }
-
     }
 
     void OnCollisionEnter(Collision other) 
