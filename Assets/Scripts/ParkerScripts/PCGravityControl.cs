@@ -21,6 +21,7 @@ public class PCGravityControl : MonoBehaviour
     {
         if (Gravity) //if there is a set planet to orbit
         {
+
             Vector3 gravityUp = Vector3.zero;
 
             gravityUp = (transform.position - Gravity.transform.position).normalized;
