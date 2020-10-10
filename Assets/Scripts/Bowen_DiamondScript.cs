@@ -7,7 +7,7 @@ public class Bowen_DiamondScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        transform.position = new Vector3(39.7, 60, 132);
+        transform.position = new Vector3(39.7f, 60, 132);
 
         Vector3 newPosition = transform.position; // We store the current position
         newPosition.y = 70; // We set a axis, in this case the y axis
