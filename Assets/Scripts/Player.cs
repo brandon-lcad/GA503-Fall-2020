@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI; 
 
-public class Player : MonoBehaviour
-{
+public class Player : MonoBehaviour {
     [Header("Health")]
     [SerializeField] private float health = 0;
     [SerializeField] private float maxHealth = 100;
@@ -37,8 +36,13 @@ public class Player : MonoBehaviour
     [Header("Input")]
     [SerializeField] private Vector2 playerInput;
 
+    [Header("Audio")]
+    public AudioSource source;
+    public AudioClip ouchSound;
+    public AudioClip hornSound; 
+
     private Rigidbody rb;
-    private Animator animator;
+    private Animator animator; 
 
     // Awake is called before the game starts
     void Awake() 
@@ -53,6 +57,7 @@ public class Player : MonoBehaviour
         rotateSpeed *= 100f;
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+        source = GetComponent<AudioSource>(); 
     }
 
     // FixedUpdate is called before each physics update
@@ -122,10 +127,18 @@ public class Player : MonoBehaviour
 
             if (health <= 0) {
                 if (!dead) {
-                    dead = true;
-                    Debug.Log("You died!");
+                    dead = true; 
                     animator.SetTrigger("Die");
+                    source.clip = ouchSound;
+                    source.Play();
+                    GameManager.Instance.GetComponent<AudioSource>().pitch = 0.5f; 
                 }
+            }
+
+            // Do airhorn stuff when pressing space
+            if (!dead && Input.GetKeyUp(KeyCode.E)) {
+                source.clip = hornSound;
+                source.Play();
             }
         }
     }
